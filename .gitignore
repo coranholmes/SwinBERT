@@ -41,6 +41,7 @@ linjli
 ./datasets
 ./models
 ./predictions
+./apex
 
 # compiled files #
 *.pyc
