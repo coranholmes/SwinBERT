@@ -67,6 +67,16 @@ We provide a [Docker image](https://hub.docker.com/r/linjieli222/videocap_torch1
 We only support Linux with NVIDIA GPUs. We test on Ubuntu 18.04 and V100 cards.
 We use mixed-precision training hence GPUs with Tensor Cores are recommended.
 
+pre-requisites:
+```bash
+sudo apt-get install libopenmpi-dev
+```
+To install apex:
+```bash
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install -v --disable-pip-version-check --no-cache-dir ./
+```
 
 ## Download
 
@@ -372,6 +382,12 @@ For online decoding, please use `TVC/val.yaml`
 For offline decoding, please use  `TVC/val_128frames.yaml`
 
 ## Training
+
+Before training, generate frame tsv file by running
+
+```bash
+python prepro/create_image_frame_tsv.py --dataset $DATASET --split train --image_size 256 --num_frames 128
+```
 
 We provide example scripts to train our model (with 32-frame inputs, soft sparse attention)
 

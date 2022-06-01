@@ -19,7 +19,7 @@ from apex.parallel import DistributedDataParallel as DDP
 from tqdm import tqdm
 from src.configs.config import (basic_check_arguments, shared_configs, restore_training_settings)
 from src.datasets.vl_dataloader import make_data_loader
-from src.evalcap.utils_caption_evaluate import evaluate_on_coco_caption
+# from src.evalcap.utils_caption_evaluate import evaluate_on_coco_caption
 from src.utils.logger import LOGGER as logger
 from src.utils.logger import (TB_LOGGER, RunningMeter, add_log_to_file)
 from src.utils.load_save import TrainingRestorer, TrainingSaver
@@ -485,7 +485,7 @@ def update_existing_config_for_inference(args):
 
     train_args.eval_model_dir = args.eval_model_dir
     train_args.resume_checkpoint = args.eval_model_dir + 'model.bin'
-    train_args.model_name_or_path = 'models/captioning/bert-base-uncased/'
+    train_args.model_name_or_path = '/home/acsguser/Codes/SwinBERT/models/captioning/bert-base-uncased/'
     train_args.do_train = False
     train_args.do_eval = True
     train_args.do_test = True

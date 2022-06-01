@@ -6,15 +6,15 @@ from src.modeling.video_swin.config import Config
 def get_swin_model(args):
     if int(args.img_res) == 384:
         assert args.vidswin_size == "large"
-        config_path = 'src/modeling/video_swin/swin_%s_384_patch244_window81212_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
-        model_path = './models/video_swin_transformer/swin_%s_384_patch244_window81212_kinetics%s_22k.pth'%(args.vidswin_size, args.kinetics)
+        config_path = '/home/acsguser/Codes/SwinBERT/src/modeling/video_swin/swin_%s_384_patch244_window81212_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
+        model_path = '/home/acsguser/Codes/SwinBERT/models/video_swin_transformer/swin_%s_384_patch244_window81212_kinetics%s_22k.pth'%(args.vidswin_size, args.kinetics)
     else:
         # in the case that args.img_res == '224'
-        config_path = 'src/modeling/video_swin/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
-        model_path = './models/video_swin_transformer/swin_%s_patch244_window877_kinetics%s_22k.pth'%(args.vidswin_size, args.kinetics)
+        config_path = '/home/acsguser/Codes/SwinBERT/src/modeling/video_swin/swin_%s_patch244_window877_kinetics%s_22k.py'%(args.vidswin_size, args.kinetics)
+        model_path = '/home/acsguser/Codes/SwinBERT/models/video_swin_transformer/swin_%s_patch244_window877_kinetics%s_22k.pth'%(args.vidswin_size, args.kinetics)
     if args.pretrained_2d:
-        config_path = 'src/modeling/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
-        model_path = './models/swin_transformer/swin_base_patch4_window7_224_22k.pth'
+        config_path = '/home/acsguser/Codes/SwinBERT/src/modeling/video_swin/swin_base_patch244_window877_kinetics400_22k.py'
+        model_path = '/home/acsguser/Codes/SwinBERT/models/swin_transformer/swin_base_patch4_window7_224_22k.pth'
 
     logger.info(f'video swin (config path): {config_path}')
     if args.pretrained_checkpoint == '':

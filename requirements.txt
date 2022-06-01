@@ -1,0 +1,13 @@
+protobuf==4.0.0rc2
+deepspeed
+easydict
+tensorboardX
+pyyaml
+av
+scikit-image
+opencv-python
+fairscale
+einops
+addict
+yapf
+boto3

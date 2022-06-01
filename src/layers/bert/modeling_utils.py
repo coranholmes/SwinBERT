@@ -798,7 +798,7 @@ class PreTrainedModel(nn.Module):
 
         while cur_len < max_length:
             model_inputs = self.prepare_inputs_for_generation(input_ids, past=past)
-            outputs = self(**model_inputs)
+            outputs = self(**model_inputs)  # shape=[1,2,30522] dic_size=30522
             if cur_len == 1:
                 token_len = 2 + self.od_labels_len
                 next_token_idx = 1
@@ -812,7 +812,7 @@ class PreTrainedModel(nn.Module):
                     next_token_idx = 1
 
             assert outputs[0].shape[1] == token_len
-            next_token_logits = outputs[0][:, next_token_idx, :]
+            next_token_logits = outputs[0][:, next_token_idx, :]  # shape=[1,30522]
 
             # if model has past, then set the past variable to speed up decoding
             if self._do_output_past(outputs):
@@ -865,15 +865,15 @@ class PreTrainedModel(nn.Module):
         if cur_len == max_length:
             input_ids[:, -1].masked_fill_(cur_unfinished.to(dtype=torch.bool), eos_token_ids[0])
 
-        logprobs = torch.cat(logprobs, dim=1)
-        unfinished_sents = torch.stack(unfinished_sents, dim=1).float()
+        logprobs = torch.cat(logprobs, dim=1)  # shape=[1,sent_len]
+        unfinished_sents = torch.stack(unfinished_sents, dim=1).float()  # shape=[1,sent_len]
         sum_logprobs = (logprobs * unfinished_sents).sum(dim=1)
         # return logprobs to keep consistent with beam search output
         logprobs = sum_logprobs / unfinished_sents.sum(dim=1)
 
         # pad to the same length, otherwise DataParallel will give error
         pad_len = max_length - input_ids.shape[1]
-        if pad_len > 0:
+        if pad_len > 0:  # 填充到max_len
             padding_ids = input_ids.new(batch_size, pad_len).fill_(pad_token_id)
             input_ids = torch.cat([input_ids, padding_ids], dim=1)
 

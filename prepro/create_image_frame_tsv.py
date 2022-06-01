@@ -132,7 +132,7 @@ def main(args):
                 pbar.update(1)
                 yield(line_item)
     if args.image_size < 0:
-        resolved_visual_file = f"{output_folder}/{args.split}_{args.num_frames}frames.img.tsv" 
+        resolved_visual_file = f"{output_folder}/{args.split}_{args.num_frames}frames.img.tsv"
     else:
         resolved_visual_file = f"{output_folder}/{args.split}_{args.num_frames}frames_img_size{args.image_size}.img.tsv"
     print("generating visual file for", resolved_visual_file)

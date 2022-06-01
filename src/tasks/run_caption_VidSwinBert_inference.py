@@ -35,7 +35,7 @@ def _online_video_decode(args, video_path):
                 video_path, target_fps=3, num_frames=decoder_num_frames,
                 multi_thread_decode=False, sampling_strategy="uniform",
                 safeguard_duration=False, start=None, end=None)
-    return frames
+    return frames  # shape=[64,3,240,320]
 
 def _transforms(args, frames):
     raw_video_crop_list = [
@@ -67,16 +67,18 @@ def inference(args, video_path, model, tokenizer, tensorizer):
 
     model.float()
     model.eval()
-    frames = _online_video_decode(args, video_path)
-    preproc_frames = _transforms(args, frames)
-    data_sample = tensorizer.tensorize_example_e2e('', preproc_frames)
+    frames = _online_video_decode(args, video_path)  # shape=[T,C,W,H] T is the no of frames (=64)
+    preproc_frames = _transforms(args, frames)  # shape=[T,C,224,224] 对视频帧进行变形，小视频变为224x224
+    data_sample = tensorizer.tensorize_example_e2e('', preproc_frames)  # {tuple:5}
     data_sample = tuple(t.to(args.device) for t in data_sample)
     with torch.no_grad():
 
         inputs = {'is_decode': True,
-            'input_ids': data_sample[0][None,:], 'attention_mask': data_sample[1][None,:],
-            'token_type_ids': data_sample[2][None,:], 'img_feats': data_sample[3][None,:],
-            'masked_pos': data_sample[4][None,:],
+            'input_ids': data_sample[0][None,:],  # shape=[1,max_len], 初始全为[MASK]
+            'attention_mask': data_sample[1][None,:],  # shape=[1,1598,1598]
+            'token_type_ids': data_sample[2][None,:],  # shape=[1,max_len]
+            'img_feats': data_sample[3][None,:],  # shape=[1,64,3,224,224]
+            'masked_pos': data_sample[4][None,:],  # shape=[1,max_len]
             'do_sample': False,
             'bos_token_id': cls_token_id,
             'pad_token_id': pad_token_id,
@@ -147,7 +149,7 @@ def update_existing_config_for_inference(args):
 
     train_args.eval_model_dir = args.eval_model_dir
     train_args.resume_checkpoint = args.eval_model_dir + 'model.bin'
-    train_args.model_name_or_path = 'models/captioning/bert-base-uncased/'
+    train_args.model_name_or_path = '/home/acsguser/Codes/SwinBERT/models/captioning/bert-base-uncased/'
     train_args.do_train = False
     train_args.do_eval = True
     train_args.do_test = True
@@ -181,7 +183,7 @@ def get_custom_args(base_config):
     return args
 
 def main(args):
-    args = update_existing_config_for_inference(args)
+    args = update_existing_config_for_inference(args)  # models/table1/vatex/log/args.json 注意 max_gen_len
     # global training_saver
     args.device = torch.device(args.device)
     # Setup CUDA, GPU & distributed training
@@ -201,7 +203,7 @@ def main(args):
     logger.info(f"Cuda version is: {torch.version.cuda}")
     logger.info(f"cuDNN version is : {torch.backends.cudnn.version()}" )
 
-     # Get Video Swin model 
+    # Get Video Swin model
     swin_model = get_swin_model(args)
     # Get BERT and tokenizer 
     bert_model, config, tokenizer = get_bert_model(args)

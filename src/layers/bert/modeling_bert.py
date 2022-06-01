@@ -1746,8 +1746,8 @@ class BertForImageCaptioning(BertPreTrainedModel):
         def _remove_elements(t, start, end):
             if t is None:
                 return t
-            assert t.shape == (batch_size, self.max_seq_len + self.od_labels_len)
-            return torch.cat([t[:, :start], t[:, end:]], dim=1)
+            assert t.shape == (batch_size, self.max_seq_len + self.od_labels_len)  # shape=[1,30]
+            return torch.cat([t[:, :start], t[:, end:]], dim=1)  # torch.cat([1,2],[1,0])=[1,2]
 
         if past is None:
             input_ids = torch.cat([curr_ids, mask_ids], dim=1)
@@ -1755,15 +1755,15 @@ class BertForImageCaptioning(BertPreTrainedModel):
             curr_len = input_ids.shape[1]
             full_len = self.max_seq_len + self.od_labels_len + self.img_seq_len
             assert self.full_attention_mask.shape == (batch_size,
-                    full_len, full_len)
+                    full_len, full_len)  # shape=[1598,1598,1]
 
             def _remove_rows_cols(t, row_start, row_end, col_start, col_end):
-                t00 = t[:, :row_start, :col_start]
-                t01 = t[:, :row_start, col_end:]
-                t10 = t[:, row_end:, :col_start]
-                t11 = t[:, row_end:, col_end:]
+                t00 = t[:, :row_start, :col_start]  # shape=[1,2,2]
+                t01 = t[:, :row_start, col_end:]  # shape=[1,2,1568]
+                t10 = t[:, row_end:, :col_start]  # shape=[1,1568,2]
+                t11 = t[:, row_end:, col_end:]  # shape=[1,1568,1568]
                 res = torch.cat([torch.cat([t00, t01], dim=2), torch.cat([t10, t11],
-                            dim=2)], dim=1)
+                            dim=2)], dim=1)  # torch.cat([1,2,1570],[1,1568,1570])=[1,1570,1570]
                 assert res.shape == (t.shape[0], t.shape[1]-row_end+row_start,
                         t.shape[2]-col_end+col_start)
                 return res
@@ -1771,12 +1771,12 @@ class BertForImageCaptioning(BertPreTrainedModel):
             seq_start = curr_len
             seq_end = self.max_seq_len
             attention_mask = _remove_rows_cols(self.full_attention_mask, seq_start,
-                    seq_end, seq_start, seq_end)
+                    seq_end, seq_start, seq_end)  # shape=[1,1570,1570]
 
-            masked_pos = _remove_elements(self.full_masked_pos, seq_start, seq_end)
-            token_type_ids = _remove_elements(self.full_token_type_ids, seq_start, seq_end)
-            position_ids = _remove_elements(self.full_position_ids, seq_start, seq_end)
-            img_feats = self.img_feats
+            masked_pos = _remove_elements(self.full_masked_pos, seq_start, seq_end)  # shape=[1,2]
+            token_type_ids = _remove_elements(self.full_token_type_ids, seq_start, seq_end)  # shape=[1,2]
+            position_ids = _remove_elements(self.full_position_ids, seq_start, seq_end)  # shape=[1,2]
+            img_feats = self.img_feats  # shape=[1,1568,512]
 
             if self.add_od_labels:
                 assert self.od_label_ids.shape[1] == self.od_labels_len
@@ -1848,17 +1848,17 @@ class BertForImageCaptioning(BertPreTrainedModel):
         """
         assert is_decode
         batch_size = img_feats.shape[0]
-        self.img_seq_len = img_feats.shape[1]
-        self.max_seq_len = max_length
-        self.mask_token_id = mask_token_id
+        self.img_seq_len = img_feats.shape[1]  # 1568
+        self.max_seq_len = max_length  # default: 20
+        self.mask_token_id = mask_token_id  # 103
         self.prev_encoded_layers = None
         # NOTE: num_keep_best is not equavilant to num_return_sequences
         # num_keep_best is the number of hypotheses to keep in beam search
         # num_return_sequences is the repeating times of input, coupled with
         # do_sample=True can generate more than one samples per image
-        self.num_keep_best = num_keep_best
+        self.num_keep_best = num_keep_best  # 1
 
-        vocab_size = self.config.vocab_size
+        vocab_size = self.config.vocab_size  # 30522
         if not use_cbs:
             num_fsm_states = 1
         else:
@@ -1883,12 +1883,12 @@ class BertForImageCaptioning(BertPreTrainedModel):
         if input_ids is None:
             input_ids = torch.full(
                 (batch_size, 1), bos_token_id, dtype=torch.long, device=next(self.parameters()).device
-            )
+            )  # shape=[B,1]
         else:
             assert input_ids.dim() == 2, "Input prompt should be of shape (batch_size, sequence length)."
             assert input_ids.shape[0] == batch_size, "Input batch size must match image features"
 
-        cur_len = input_ids.shape[1]
+        cur_len = input_ids.shape[1]  # current length is 1, only including the bos_token_id
         if  num_return_sequences != 1:
             # Expand input to num return sequences
             input_ids = self._expand_for_beams(input_ids, num_return_sequences)
@@ -1897,7 +1897,7 @@ class BertForImageCaptioning(BertPreTrainedModel):
             effective_batch_size = batch_size
 
         if position_ids is None:
-            position_ids = torch.arange(self.max_seq_len, dtype=torch.long, device=input_ids.device)
+            position_ids = torch.arange(self.max_seq_len, dtype=torch.long, device=input_ids.device)  # shape=[30,]
             posids_len = self.max_seq_len
             if self.add_od_labels:
                 od_labels_posids = torch.arange(
@@ -1905,10 +1905,10 @@ class BertForImageCaptioning(BertPreTrainedModel):
                         self.od_labels_start_posid + self.od_labels_len, dtype=torch.long, device=input_ids.device)
                 position_ids = torch.cat([position_ids, od_labels_posids])
                 posids_len += self.od_labels_len
-            position_ids = position_ids.unsqueeze(0).expand([batch_size, posids_len])
+            position_ids = position_ids.unsqueeze(0).expand([batch_size, posids_len])  # shape=[1,30]
 
-        num_expand = num_beams * num_fsm_states * num_return_sequences
-        self.od_label_ids = self._expand_for_beams(od_label_ids, num_expand)
+        num_expand = num_beams * num_fsm_states * num_return_sequences  # 1*1*1
+        self.od_label_ids = self._expand_for_beams(od_label_ids, num_expand)  # Expand input to num return sequences
         self.img_feats = self._expand_for_beams(img_feats, num_expand)
         self.full_attention_mask = self._expand_for_beams(attention_mask, num_expand)
         self.full_masked_pos = self._expand_for_beams(masked_pos, num_expand)

@@ -34,11 +34,11 @@ class VideoTransformer(torch.nn.Module):
         B, S, C, H, W = images.shape  # batch, segment, chanel, hight, width
         # (B x S x C x H x W) --> (B x C x S x H x W)
         images = images.permute(0, 2, 1, 3, 4)
-        vid_feats = self.swin(images)
+        vid_feats = self.swin(images)  # Section3.1: video swin transformer, shape=[1,1024,32,7,7], 其中32=64/2, 7=224/32
         if self.use_grid_feat==True:
-            vid_feats = vid_feats.permute(0, 2, 3, 4, 1)
-        vid_feats = vid_feats.view(B, -1, self.latent_feat_size)
-        vid_feats = self.fc(vid_feats)
+            vid_feats = vid_feats.permute(0, 2, 3, 4, 1)  # shape=[1,32,7,7,1024]
+        vid_feats = vid_feats.view(B, -1, self.latent_feat_size)  # shape=[1,1568,1024], 1568=32*7*7
+        vid_feats = self.fc(vid_feats)  # shape=[1,1568,512]
         # prepare VL transformer inputs
         kwargs['img_feats'] = vid_feats
         if self.trans_encoder.bert.encoder.output_attentions:
@@ -47,20 +47,20 @@ class VideoTransformer(torch.nn.Module):
         if self.learn_mask_enabled:
             kwargs['attention_mask'] = kwargs['attention_mask'].float()
             vid_att_len = self.max_img_seq_length
-            learn_att = self.learn_vid_att.weight.reshape(vid_att_len,vid_att_len)
+            learn_att = self.learn_vid_att.weight.reshape(vid_att_len,vid_att_len)  # shape=[1568,1568]
             learn_att = self.sigmoid(learn_att)
-            diag_mask = torch.diag(torch.ones(vid_att_len)).cuda()
-            video_attention = (1. - diag_mask)*learn_att
-            learn_att = diag_mask + video_attention
+            diag_mask = torch.diag(torch.ones(vid_att_len)).cuda()  # shape=[1568,1568]单位矩阵
+            video_attention = (1. - diag_mask)*learn_att  # shape=[1568,1568]
+            learn_att = diag_mask + video_attention  # shape=[1568,1568]
             if self.sparse_mask_soft2hard:
                 learn_att = (learn_att>=0.5)*1.0
                 learn_att = learn_att.cuda()
                 learn_att.requires_grad = False
-            kwargs['attention_mask'][:, -vid_att_len::, -vid_att_len::] = learn_att
-        outputs = self.trans_encoder(*args, **kwargs)
+            kwargs['attention_mask'][:, -vid_att_len::, -vid_att_len::] = learn_att  # kwargs['attention_mask'].shape=[1,1588,1588]
+        outputs = self.trans_encoder(*args, **kwargs)  # Section3.1: Multimodal Transformer Encoder
         if self.learn_mask_enabled:
             loss_sparsity = self.get_loss_sparsity(video_attention)  
-            outputs = outputs + (loss_sparsity, )          
+            outputs = outputs + (loss_sparsity, )  # outputs增加一项loss_sparsity返回
         return outputs
     
     def get_loss_sparsity(self, video_attention):
