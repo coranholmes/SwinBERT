@@ -39,8 +39,8 @@ tmp*.py
 */*output*/
 linjli
 ./datasets
-# ./models
-
+./models
+./predictions
 
 # compiled files #
 *.pyc
