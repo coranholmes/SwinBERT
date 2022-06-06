@@ -45,7 +45,7 @@ def import_modules_from_strings(imports, allow_failed_imports=False):
     Examples:
         >>> osp, sys = import_modules_from_strings(
         ...     ['os.path', 'sys'])
-        >>> import os.path as osp_
+        >>> import os.ds_dir as osp_
         >>> import sys as sys_
         >>> assert osp == osp_
         >>> assert sys == sys_

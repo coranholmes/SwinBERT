@@ -11,3 +11,11 @@ einops
 addict
 yapf
 boto3
+progressbar
+matplotlib
+future
+ete3
+deprecated
+azureml
+azureml-core
+mpi4py

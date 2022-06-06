@@ -44,7 +44,7 @@ def _extract_tarinfo(tf: tarfile.TarFile, parent_info: Dict, extensions=IMG_EXTE
     for i, ti in enumerate(tf):
         if not ti.isfile():
             continue
-        dirname, basename = os.path.split(ti.path)
+        dirname, basename = os.path.split(ti.ds_dir)
         name, ext = os.path.splitext(basename)
         ext = ext.lower()
         if ext == '.tar':
@@ -122,7 +122,7 @@ def extract_tarinfos(root, class_name_to_idx=None, cache_tarinfo=None, extension
     def _add_samples(info, fn):
         added = 0
         for s in info['samples']:
-            label = _label_from_paths(info['path'], os.path.dirname(s.path))
+            label = _label_from_paths(info['path'], os.path.dirname(s.ds_dir))
             if not build_class_map and label not in class_name_to_idx:
                 continue
             samples.append((s, fn, info['ti']))
@@ -154,7 +154,7 @@ def extract_tarinfos(root, class_name_to_idx=None, cache_tarinfo=None, extension
     _logger.info(f'Mapping targets and sorting samples.')
     samples_and_targets = [(s, class_name_to_idx[l]) for s, l in zip(samples, labels) if l in class_name_to_idx]
     if sort:
-        samples_and_targets = sorted(samples_and_targets, key=lambda k: natural_key(k[0][0].path))
+        samples_and_targets = sorted(samples_and_targets, key=lambda k: natural_key(k[0][0].ds_dir))
     samples, targets = zip(*samples_and_targets)
     samples = np.array(samples)
     targets = np.array(targets)

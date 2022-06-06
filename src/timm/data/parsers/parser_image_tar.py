@@ -20,7 +20,7 @@ def extract_tarinfo(tarfile, class_to_idx=None, sort=True):
     for ti in tarfile.getmembers():
         if not ti.isfile():
             continue
-        dirname, basename = os.path.split(ti.path)
+        dirname, basename = os.path.split(ti.ds_dir)
         label = os.path.basename(dirname)
         ext = os.path.splitext(basename)[1]
         if ext.lower() in IMG_EXTENSIONS:
@@ -32,7 +32,7 @@ def extract_tarinfo(tarfile, class_to_idx=None, sort=True):
         class_to_idx = {c: idx for idx, c in enumerate(sorted_labels)}
     tarinfo_and_targets = [(f, class_to_idx[l]) for f, l in zip(files, labels) if l in class_to_idx]
     if sort:
-        tarinfo_and_targets = sorted(tarinfo_and_targets, key=lambda k: natural_key(k[0].path))
+        tarinfo_and_targets = sorted(tarinfo_and_targets, key=lambda k: natural_key(k[0].ds_dir))
     return tarinfo_and_targets, class_to_idx
 
 
