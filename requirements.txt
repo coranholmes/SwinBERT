@@ -19,3 +19,4 @@ deprecated
 azureml
 azureml-core
 mpi4py
+torchvision

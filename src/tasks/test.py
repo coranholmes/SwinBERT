@@ -1,17 +1,15 @@
-import os,pickle
+import os
 
 if __name__ == "__main__":
-    root_dir = "/home/acsguser/Codes/SwinBERT/"
-    ds_dir = os.path.join(root_dir, "datasets", "Crime")
-    g = os.walk(ds_dir)
-
-    cap_pkl = open("/home/acsguser/Codes/SwinBERT/datasets/captions.pkl", "rb")
-    cap_file = open("/home/acsguser/Codes/SwinBERT/datasets/captions.txt", "w")
-    cap_dict = pickle.load(cap_pkl)
-
-    for k, v in cap_dict.items():
-        cap_file.writelines(k+"\t"+v+"\n")
-
-    cap_file.close()
-    cap_pkl.close()
-
+    ds_root = "/home/acsguser/Codes/SwinBERT/datasets/Crime/"
+    with open(os.path.join(ds_root, "captions.txt")) as f:
+        max_len = 0
+        sent = ''
+        for line in f:
+            line = line.strip()
+            arr = line.split("\t")
+            cur_len = len(arr[1])
+            if cur_len > max_len:
+                max_len = cur_len
+                sent = arr[1]
+    print(max_len, sent)
