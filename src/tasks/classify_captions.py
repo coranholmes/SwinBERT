@@ -8,10 +8,11 @@ import torch.nn.functional as F
 from transformers import BertTokenizer, BertForSequenceClassification, AdamW
 from transformers import get_linear_schedule_with_warmup
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
+import dill
 
 SEED = 123
 BATCH_SIZE = 16
-LEARNING_RATE = 2e-5
+LEARNING_RATE = 2e-5  # [5e-5, 3e-5, 2e-5]
 WEIGHT_DECAY = 1e-2
 EPSILON = 1e-8
 epochs = 10
@@ -58,7 +59,7 @@ def compute_metrics(preds, labels):  # preds.shape=(16, 2) labels.shape=torch.Si
 
 def train(model, optimizer):
     t0 = time.time()
-    avg_loss, avg_acc, avg_f1, avg_auc = [], [], [], []
+    losses, outputs, labels = [], [], []
 
     model.train()
     for step, batch in enumerate(train_dataloader):
@@ -72,48 +73,41 @@ def train(model, optimizer):
 
         output = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
         loss, logits = output[0], output[1]
-
-        avg_loss.append(loss.item())
-
-        acc, f1, auc = compute_metrics(logits, b_labels)
-        avg_acc.append(acc)
-        avg_f1.append(f1)
-        if auc is not None:
-            avg_auc.append(auc)
-
+        losses.append(output[0].item())
+        outputs.append(output[1])
+        labels.append(b_labels)
         optimizer.zero_grad()
         loss.backward()
         clip_grad_norm_(model.parameters(), 1.0)  # 大于1的梯度将其设为1.0, 以防梯度爆炸
         optimizer.step()  # 更新模型参数
         scheduler.step()  # 更新learning rate
 
-    avg_acc = np.array(avg_acc).mean()
-    avg_f1 = np.array(avg_f1).mean()
-    avg_auc = np.array(avg_auc).mean()
-    avg_loss = np.array(avg_loss).mean()
-    return avg_loss, avg_acc, avg_f1, avg_auc
+    outputs = torch.cat(outputs, dim=0)  # logits.shape=[N,2]
+    labels = torch.cat(labels, dim=0)
+
+    acc, f1, auc = compute_metrics(outputs, labels)
+    avg_loss = np.array(losses).mean()
+    return avg_loss, acc, f1, auc
 
 
 def evaluate(model):
-    avg_acc, avg_f1, avg_auc = [], [], []
     model.eval()  # 表示进入测试模式
 
+    outputs = []
+    labels = []
     with torch.no_grad():
         for batch in test_dataloader:
             b_input_ids, b_input_mask, b_labels = batch[0].long().to(device), batch[1].long().to(device), batch[
                 2].long().to(device)
 
             output = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask)
-            # TODO concat output[0], 最后才计算Metrics
-            acc, f1, auc = compute_metrics(output[0], b_labels)
-            avg_acc.append(acc)
-            avg_f1.append(f1)
-            if auc is not None:
-                avg_auc.append(auc)
-    avg_acc = np.array(avg_acc).mean()
-    avg_f1 = np.array(avg_f1).mean()
-    avg_auc = np.array(avg_auc).mean()
-    return avg_acc, avg_f1, avg_auc
+            outputs.append(output[0])
+            labels.append(b_labels)
+        outputs = torch.cat(outputs, dim=0)
+        labels = torch.cat(labels, dim=0)
+        print(outputs.shape, labels.shape)
+        acc, f1, auc = compute_metrics(outputs, labels)
+    return acc, f1, auc
 
 
 def predict(sen):
@@ -155,7 +149,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=BATCH_SIZE)
     test_data = TensorDataset(test_inputs, test_masks, test_labels)
     test_sampler = SequentialSampler(test_data)
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=BATCH_SIZE*8)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=BATCH_SIZE)
 
     # create model and optimizer
     # checkpoint = torch.load(os.path.join(root_dir, "models", "classification", "classify_epoch_0.pth"))
@@ -163,15 +157,15 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
-    # optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=EPSILON)
+    optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, eps=EPSILON)
 
-    no_decay = ['bias', 'LayerNorm.weight']
-    optimizer_grouped_parameters = [
-        {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-         'weight_decay': WEIGHT_DECAY},
-        {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-    ]
-    optimizer = AdamW(optimizer_grouped_parameters, lr=LEARNING_RATE, eps=EPSILON)
+    # no_decay = ['bias', 'LayerNorm.weight']
+    # optimizer_grouped_parameters = [
+    #     {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+    #      'weight_decay': WEIGHT_DECAY},
+    #     {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    # ]
+    # optimizer = AdamW(optimizer_grouped_parameters, lr=LEARNING_RATE, eps=EPSILON)
 
     # training steps 的数量: [number of batches] x [number of epochs].
     total_steps = len(train_dataloader) * epochs
@@ -185,12 +179,13 @@ if __name__ == "__main__":
                                                                                 train_loss))
 
         # save model
-        checkpoint = {
-            'epoch': epoch,
-            'model': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler}
-        torch.save(checkpoint, os.path.join(root_dir, "models", "classification", "classify_" + str(epoch) + "_" + str(BATCH_SIZE) + ".pth"))
+        # checkpoint = {
+        #     'epoch': epoch,
+        #     'model': model.state_dict(),
+        #     'optimizer': optimizer.state_dict(),
+        #     'scheduler': scheduler}
+        model_path = os.path.join(root_dir, "models", "classification", "classify_" + str(epoch) + "_" + str(BATCH_SIZE) + ".pth")
+        torch.save(model.state_dict(), model_path)
 
         test_acc, test_f1, test_auc = evaluate(model)
         print("epoch={},test acc={}, test f1={}, test auc={}".format(epoch, test_acc, test_f1, test_auc))
