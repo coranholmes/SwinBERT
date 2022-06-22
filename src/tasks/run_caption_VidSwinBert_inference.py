@@ -33,7 +33,7 @@ from src.modeling.load_bert import get_bert_model
 def _online_video_decode(args, video_path):
     decoder_num_frames = getattr(args, 'max_num_frames', 2)
     frames, _ = extract_frames_from_video_path(
-                video_path, args.dense_caption, target_fps=3, num_frames=decoder_num_frames,
+                video_path, args.dense_caption, args.dense_caption_num, target_fps=3, num_frames=decoder_num_frames,
                 multi_thread_decode=False, sampling_strategy="uniform",
                 safeguard_duration=False, start=None, end=None)
     return frames  # shape=[64,3,240,320]
@@ -157,6 +157,7 @@ def update_existing_config_for_inference(args):
     train_args.val_yaml = args.val_yaml
     train_args.test_video_fname = args.test_video_fname
     train_args.dense_caption = args.dense_caption
+    train_args.dense_caption_num = args.dense_caption_num
     return train_args
 
 def get_custom_args(base_config):
@@ -184,6 +185,7 @@ def get_custom_args(base_config):
     parser.add_argument("--dense_caption", action='store_true')
     parser.add_argument('--no-dense_caption', dest='dense_caption', action='store_false')
     parser.set_defaults(dense_caption=True)
+    parser.add_argument("--dense_caption_num", type=int, default=32, help="The num of generated dense captoins for each video.")
     args = base_config.parse_args()
     return args
 

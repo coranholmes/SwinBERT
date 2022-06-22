@@ -6,7 +6,7 @@ import numpy as np
 from src.datasets.data_utils import video_decoder as decoder
 import code
 
-def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
+def get_video_decoding_kwargs(container, dense_caption, dense_caption_num, num_frames, target_fps,
                               num_clips=None, clip_idx=None,
                               sampling_strategy="rand",
                               safeguard_duration=False, video_max_pts=None,
@@ -18,6 +18,7 @@ def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
             decoder_kwargs = dict(
                 container=container,
                 dense_caption=dense_caption,
+                dense_caption_num=dense_caption_num,
                 sampling_rate=1,
                 num_frames=num_frames,
                 clip_idx=-1,  # random sampling
@@ -29,6 +30,7 @@ def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
             decoder_kwargs = dict(
                 container=container,
                 dense_caption=dense_caption,
+                dense_caption_num=dense_caption_num,
                 sampling_rate=1,  # will not be used when clip_idx is `-2`
                 num_frames=num_frames,
                 clip_idx=-2,  # uniformly sampling from the whole video
@@ -40,6 +42,7 @@ def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
             decoder_kwargs = dict(
                 container=container,
                 dense_caption=dense_caption,
+                dense_caption_num=dense_caption_num,
                 sampling_rate=1,
                 num_frames=num_frames,
                 clip_idx=three_clip_names.index(sampling_strategy),
@@ -55,6 +58,7 @@ def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
         decoder_kwargs = dict(
             container=container,
             dense_caption=dense_caption,
+            dense_caption_num=dense_caption_num,
             sampling_rate=1,
             num_frames=num_frames,
             clip_idx=clip_idx,
@@ -67,13 +71,13 @@ def get_video_decoding_kwargs(container, dense_caption, num_frames, target_fps,
     return decoder_kwargs
 
 def extract_frames_from_video_path(
-        video_path, dense_caption=False, target_fps=3, num_frames=3,
+        video_path, dense_caption=False, dense_caption_num=32, target_fps=3, num_frames=3,
         multi_thread_decode=False, sampling_strategy="rand",
         safeguard_duration=False, start=None, end=None):
     in_mem_bytes_io = video_path
     try:
         frames, video_max_pts = extract_frames_from_video_binary(
-            in_mem_bytes_io, dense_caption, target_fps=target_fps, num_frames=num_frames,
+            in_mem_bytes_io, dense_caption, dense_caption_num, target_fps=target_fps, num_frames=num_frames,
             multi_thread_decode=multi_thread_decode,
             sampling_strategy=sampling_strategy,
             safeguard_duration=safeguard_duration,
@@ -85,7 +89,7 @@ def extract_frames_from_video_path(
 
 
 def extract_frames_from_video_binary(
-        in_mem_bytes_io, dense_caption, target_fps=3, num_frames=3, num_clips=None, clip_idx=None,
+        in_mem_bytes_io, dense_caption, dense_caption_num=32, target_fps=3, num_frames=3, num_clips=None, clip_idx=None,
         multi_thread_decode=False, sampling_strategy="rand",
         safeguard_duration=False, video_max_pts=None,
         start=None, end=None):
@@ -143,7 +147,7 @@ def extract_frames_from_video_binary(
         # (T, H, W, C), channels are RGB
         # see docs in decoder.decode for usage of these parameters.
         decoder_kwargs = get_video_decoding_kwargs(
-            container=video_container, dense_caption=dense_caption, num_frames=num_frames,
+            container=video_container, dense_caption=dense_caption, dense_caption_num=dense_caption_num, num_frames=num_frames,
             target_fps=target_fps, num_clips=num_clips, clip_idx=clip_idx,
             sampling_strategy=sampling_strategy,
             safeguard_duration=safeguard_duration, video_max_pts=video_max_pts, 

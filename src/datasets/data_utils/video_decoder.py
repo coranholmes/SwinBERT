@@ -261,6 +261,7 @@ def pyav_decode(
 def decode(
     container,
     dense_caption,
+    dense_caption_num,
     sampling_rate,
     num_frames,
     clip_idx=-1,
@@ -335,7 +336,7 @@ def decode(
         sample_num_clips = 1
 
     if dense_caption:
-        frame_lst = list_of_groups(frames, math.ceil(len(frames) / 16))
+        frame_lst = list_of_groups(frames, math.ceil(len(frames) / dense_caption_num))
         res = []
         for ind_frames in frame_lst:
             start_idx, end_idx = get_start_end_idx(
