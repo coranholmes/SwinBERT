@@ -24,13 +24,18 @@ if __name__ == "__main__":
 
     # clf = svm.SVC(probability=True)
     # clf = RandomForestClassifier()
-    clf = MLPClassifier()
-    clf.fit(train_inpputs, train_labels)
+    auc_res = []
+    for i in [88]:
+        clf = MLPClassifier(hidden_layer_sizes=[512,256,128], batch_size=16, learning_rate="invscaling",random_state=i, max_iter=2)
+        clf.fit(train_inpputs, train_labels)
 
-    preds = clf.predict(test_inputs)
-    acc = accuracy_score(test_labels, preds)
-    f1 = f1_score(test_labels, preds)
+        preds = clf.predict(test_inputs)
+        acc = accuracy_score(test_labels, preds)
+        f1 = f1_score(test_labels, preds)
 
-    probas = clf.predict_proba(test_inputs)
-    auc = roc_auc_score(test_labels, probas[:, 1])
-    print("test acc={}, test f1={}, test auc={}".format(f1, acc, auc))
+        probas = clf.predict_proba(test_inputs)
+        auc = roc_auc_score(test_labels, probas[:, 1])
+        auc_res.append(auc)
+        print("seed={}, acc={}, test f1={}, test auc={}".format(i, f1, acc, auc))
+
+    print("max={}, avg={}".format(max(auc_res), sum(auc_res) / len(auc_res)))

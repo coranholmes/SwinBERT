@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # create model and optimizer
     # checkpoint = torch.load(os.path.join(root_dir, "models", "classification", "classify_epoch_0.pth"))
     model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2)
-    model_path = os.path.join(root_dir, "models", "classification", "lr3e-5", "classify_3_16.pth")
+    model_path = os.path.join(root_dir, "models", "classification", "lr3e-5", "classify_3_16_lr3e-5_adam_normal_best.pth")
     model.load_state_dict(torch.load(model_path))
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)

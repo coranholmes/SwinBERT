@@ -260,6 +260,7 @@ def pyav_decode(
 
 def decode(
     container,
+    dense_caption,
     sampling_rate,
     num_frames,
     clip_idx=-1,
@@ -333,14 +334,44 @@ def decode(
         sample_clip_idx = 0
         sample_num_clips = 1
 
-    start_idx, end_idx = get_start_end_idx(
-        len(frames),
-        clip_size,
-        sample_clip_idx if decode_all_video else 0,
-        sample_num_clips if decode_all_video else 1,
-    )
-    # Perform temporal sampling from the decoded video.
-    frames = temporal_sampling(frames, start_idx, end_idx, num_frames)
-    frames = [frame.to_rgb().to_ndarray() for frame in frames]
-    frames = torch.as_tensor(np.stack(frames))
+    if dense_caption:
+        frame_lst = list_of_groups(frames, math.ceil(len(frames) / 16))
+        res = []
+        for ind_frames in frame_lst:
+            start_idx, end_idx = get_start_end_idx(
+                len(ind_frames),
+                clip_size,
+                sample_clip_idx if decode_all_video else 0,
+                sample_num_clips if decode_all_video else 1,
+            )
+            ind_frames = temporal_sampling(ind_frames, start_idx, end_idx, num_frames)
+            ind_frames = [frame.to_rgb().to_ndarray() for frame in ind_frames]
+            ind_frames = torch.as_tensor(np.stack(ind_frames))
+            res.append(ind_frames)
+        frames = res
+    else:
+        start_idx, end_idx = get_start_end_idx(
+            len(frames),
+            clip_size,
+            sample_clip_idx if decode_all_video else 0,
+            sample_num_clips if decode_all_video else 1,
+        )
+        # Perform temporal sampling from the decoded video.
+        frames = temporal_sampling(frames, start_idx, end_idx, num_frames)
+        frames = [frame.to_rgb().to_ndarray() for frame in frames]
+        frames = torch.as_tensor(np.stack(frames))
     return frames, video_max_pts
+
+
+def list_of_groups(init_list, childern_list_len):
+    '''
+    init_list为初始化的列表，childern_list_len初始化列表中的几个数据组成一个小列表
+    :param init_list:
+    :param childern_list_len:
+    :return:
+    '''
+    list_of_group = zip(*(iter(init_list),) *childern_list_len)
+    end_list = [list(i) for i in list_of_group]
+    count = len(init_list) % childern_list_len
+    end_list.append(init_list[-count:]) if count !=0 else end_list
+    return end_list
