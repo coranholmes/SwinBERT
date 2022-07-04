@@ -4,9 +4,8 @@ import pickle,json
 import pandas as pd
 
 # cap_pkl = open("/home/acsguser/Codes/SwinBERT/datasets/dense_captions.pkl", "rb")
-cap_file = open("/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions_16.txt", "w")
+cap_file = open("/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions.txt", "w")
 # cap_dict = pickle.load(cap_pkl)
-
 
 def inference(args, video_path, model, tokenizer, tensorizer):
     cls_token_id, sep_token_id, pad_token_id, mask_token_id, period_token_id = \
@@ -120,7 +119,7 @@ def main(args):
                 print("processing " + args.test_video_fname)
                 cap = inference(args, args.test_video_fname, vl_transformer, tokenizer, tensorizer)
                 print(cap)
-                # cap_dict[path_new] = cap[0]
+                print("Length of caption list:", len(cap))
                 text = {
                     path_new: cap
                 }

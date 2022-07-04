@@ -336,18 +336,18 @@ def decode(
         sample_num_clips = 1
 
     if dense_caption:
-        frame_lst = list_of_groups(frames, math.ceil(len(frames) / dense_caption_num))
+        # frame_lst = list_of_groups(frames, dense_caption_num)
+        frame_lst = []
+        for i in range(0, len(frames), 16):
+            frame_lst.append(frames[i: min(i+dense_caption_num, len(frames))])
         res = []
         for ind_frames in frame_lst:
-            start_idx, end_idx = get_start_end_idx(
-                len(ind_frames),
-                clip_size,
-                sample_clip_idx if decode_all_video else 0,
-                sample_num_clips if decode_all_video else 1,
-            )
-            ind_frames = temporal_sampling(ind_frames, start_idx, end_idx, num_frames)
             ind_frames = [frame.to_rgb().to_ndarray() for frame in ind_frames]
             ind_frames = torch.as_tensor(np.stack(ind_frames))
+            if len(ind_frames) < dense_caption_num:
+                # repeat last frame until the size becomes 64
+                repeat_last = ind_frames[-1].repeat(dense_caption_num - len(ind_frames), 1, 1, 1)
+                ind_frames = torch.cat([ind_frames, repeat_last], dim=0)
             res.append(ind_frames)
         frames = res
     else:
@@ -376,3 +376,4 @@ def list_of_groups(init_list, childern_list_len):
     count = len(init_list) % childern_list_len
     end_list.append(init_list[-count:]) if count !=0 else end_list
     return end_list
+

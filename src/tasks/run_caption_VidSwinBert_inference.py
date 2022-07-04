@@ -185,7 +185,7 @@ def get_custom_args(base_config):
     parser.add_argument("--dense_caption", action='store_true')
     parser.add_argument('--no-dense_caption', dest='dense_caption', action='store_false')
     parser.set_defaults(dense_caption=True)
-    parser.add_argument("--dense_caption_num", type=int, default=32, help="The num of generated dense captoins for each video.")
+    parser.add_argument("--dense_caption_num", type=int, default=64, help="The num of generated dense captoins for each video.")
     args = base_config.parse_args()
     return args
 
