@@ -10,6 +10,9 @@ def inference(args, video_path, model, tokenizer, tensorizer):
     model.eval()
     frames_lst = _online_video_decode(args, video_path)  # shape=[T,C,W,H] T is the no of frames (=64)
 
+    if not isinstance(frames_lst, list):
+        frames_lst = [frames_lst]
+
     for frames in frames_lst:
         preproc_frames = _transforms(args, frames)  # shape=[T,C,224,224] 对视频帧进行变形，小视频变为224x224
         data_sample = tensorizer.tensorize_example_e2e('', preproc_frames)  # {tuple:5}

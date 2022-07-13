@@ -4,7 +4,7 @@ from transformers import AutoModel, AutoTokenizer
 import numpy as np
 
 if __name__ == "__main__":
-    caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions_16.txt"
+    caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions_wo_dup.txt"
     tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
     model = AutoModel.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
     with open(caption_path) as f:
@@ -17,7 +17,7 @@ if __name__ == "__main__":
             key = key[0]
             vid_name = os.path.split(key)[1][:-4]
             print(vid_name)
-            emb_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/sent_emb_16/" + vid_name + "_emb.npy"
+            emb_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/sent_emb_n/" + vid_name + "_emb.npy"
             texts = captions[key]
             inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
             with torch.no_grad():
