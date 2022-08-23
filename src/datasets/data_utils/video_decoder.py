@@ -6,6 +6,7 @@ import math
 import numpy as np
 import random
 import torch
+import gc
 
 
 def temporal_sampling(frames, start_idx, end_idx, num_samples):
@@ -340,16 +341,24 @@ def decode(
         frame_lst = []
         for i in range(0, len(frames), 16):
             frame_lst.append(frames[i: min(i+dense_caption_num, len(frames))])
+        del frames
+        gc.collect()
         res = []
-        for ind_frames in frame_lst:
+        print("frame_lst successfully prepared: ", len(frame_lst))
+        i = 0
+        while len(frame_lst) > 0:
+            i += 1
+            # print(i)
+            ind_frames = frame_lst.pop(0)
             ind_frames = [frame.to_rgb().to_ndarray() for frame in ind_frames]
             ind_frames = torch.as_tensor(np.stack(ind_frames))
             if len(ind_frames) < dense_caption_num:
                 # repeat last frame until the size becomes 64
                 repeat_last = ind_frames[-1].repeat(dense_caption_num - len(ind_frames), 1, 1, 1)
                 ind_frames = torch.cat([ind_frames, repeat_last], dim=0)
+            # print("before append")
             res.append(ind_frames)
-        frames = res
+        return res, video_max_pts
     else:
         start_idx, end_idx = get_start_end_idx(
             len(frames),
@@ -361,7 +370,7 @@ def decode(
         frames = temporal_sampling(frames, start_idx, end_idx, num_frames)
         frames = [frame.to_rgb().to_ndarray() for frame in frames]
         frames = torch.as_tensor(np.stack(frames))
-    return frames, video_max_pts
+        return frames, video_max_pts
 
 
 def list_of_groups(init_list, childern_list_len):

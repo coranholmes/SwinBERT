@@ -158,6 +158,11 @@ def update_existing_config_for_inference(args):
     train_args.test_video_fname = args.test_video_fname
     train_args.dense_caption = args.dense_caption
     train_args.dense_caption_num = args.dense_caption_num
+    train_args.dataset_path = args.dataset_path
+    train_args.rerun = args.rerun
+    train_args.caption_file = args.caption_file
+    train_args.old_caption_file = args.old_caption_file
+    train_args.video_format = args.video_format
     return train_args
 
 def get_custom_args(base_config):
@@ -185,7 +190,12 @@ def get_custom_args(base_config):
     parser.add_argument("--dense_caption", action='store_true')
     parser.add_argument('--no-dense_caption', dest='dense_caption', action='store_false')
     parser.set_defaults(dense_caption=True)
-    parser.add_argument("--dense_caption_num", type=int, default=64, help="The num of generated dense captoins for each video.")
+    parser.add_argument("--dense_caption_num", type=int, default=64, help="The num of consecutive frames used for generating the captions.")
+    parser.add_argument("--dataset_path", type=str, default='/home/acsguser/Codes/SwinBERT/datasets/Shanghai/data/')
+    parser.add_argument("--video_format", type=str, default='avi')
+    parser.add_argument("--rerun", action='store_true')
+    parser.add_argument("--old_caption_file", type=str, default="/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/all_captions.txt")
+    parser.add_argument("--caption_file", type=str, default="/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/all_captions.txt")
     args = base_config.parse_args()
     return args
 
@@ -219,7 +229,7 @@ def main(args):
     vl_transformer.freeze_backbone(freeze=args.freeze_backbone)
 
     # load weights for inference
-    logger.info(f"Loading state dict from checkpoint {args.resume_checkpoint}")
+    logger.info(f"Loading state dict from checkpoint2 {args.resume_checkpoint}")
     cpu_device = torch.device('cpu')
     pretrained_model = torch.load(args.resume_checkpoint, map_location=cpu_device)
 

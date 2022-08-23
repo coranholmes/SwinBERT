@@ -1,18 +1,7 @@
 from run_caption_VidSwinBert_inference import *
 from run_caption_VidSwinBert_inference import _online_video_decode, _transforms
 import pickle, json, sys
-import pandas as pd
 
-# cap_pkl = open("/home/acsguser/Codes/SwinBERT/datasets/dense_captions.pkl", "rb")
-
-video_set = set()
-
-with open ("/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions.txt") as f:
-    for line in f:
-        line = json.loads(line.strip())
-        for k in line.keys():
-            video_set.add(k.strip())
-cap_file = open("/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions2.txt", "a")
 
 def inference(args, video_path, model, tokenizer, tensorizer):
     cls_token_id, sep_token_id, pad_token_id, mask_token_id, period_token_id = \
@@ -22,6 +11,10 @@ def inference(args, video_path, model, tokenizer, tensorizer):
     model.float()
     model.eval()
     frames_lst = _online_video_decode(args, video_path)  # shape=[T,C,W,H] T is the no of frames (=64)
+
+    if not isinstance(frames_lst, list):
+        frames_lst = [frames_lst]
+
     print("Length of frames list:", len(frames_lst))
 
     res = []
@@ -69,6 +62,19 @@ def inference(args, video_path, model, tokenizer, tensorizer):
 
 def main(args):
     args = update_existing_config_for_inference(args)  # models/table1/vatex/log/args.json 注意 max_gen_len
+
+    # if it is a rerun, read the existing captions from the file
+    if args.rerun:
+        video_set = set()
+
+        with open(args.old_caption_file) as f:
+            for line in f:
+                line = json.loads(line.strip())
+                for k in line.keys():
+                    video_set.add(k.strip())
+
+    cap_file = open(args.caption_file, "w")
+
     # global training_saver
     args.device = torch.device(args.device)
     # Setup CUDA, GPU & distributed training
@@ -111,28 +117,19 @@ def main(args):
 
     tensorizer = build_tensorizer(args, tokenizer, is_train=False)
 
-    root_dir = "/home/acsguser/Codes/SwinBERT/"
-    ds_dir = os.path.join(root_dir, "datasets", "Crime")
+    ds_dir = args.dataset_path
     g = os.walk(ds_dir)
-
-    bl_ids = [307,308,633]
 
     for path, dir_list, file_list in g:
         for file_name in file_list:
-            is_bl_id = False
+
             file_name = file_name.strip()
             args.test_video_fname = os.path.join(path, file_name)
-            if args.test_video_fname.endswith(".mp4"):
+            if args.test_video_fname.endswith(args.video_format):
                 p_group = args.test_video_fname.split("/")
                 path_new = "/".join([p_group[-2], p_group[-1]])
 
-                for id in bl_ids:
-                    if str(id) in path_new:
-                        is_bl_id = True
-                if is_bl_id:
-                    print("Encounter " + path_new)
-                    continue
-                if path_new in video_set:
+                if args.rerun and path_new in video_set:
                     print("Already process " + path_new)
                     continue
 

@@ -4,7 +4,7 @@ from transformers import AutoModel, AutoTokenizer
 import numpy as np
 
 if __name__ == "__main__":
-    caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions_wo_dup.txt"
+    caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/dense_captions2.txt"
     tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
     model = AutoModel.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
     with open(caption_path) as f:
