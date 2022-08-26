@@ -1,7 +1,7 @@
-import cv2
+import cv2,sys
 
 if __name__ == "__main__":
-    file_path = '/home/acsguser/Codes/SwinBERT/datasets/Crime/data/Testing_Normal_Videos_Anomaly/Normal_Videos_923_x264.mp4'
+    file_path = '/home/acsguser/Codes/SwinBERT/datasets/Shanghai/data/training/videos/01_001.avi'
     cap = cv2.VideoCapture(file_path)
     if cap.isOpened():  # 当成功打开视频时cap.isOpened()返回True,否则返回False
         # get方法参数按顺序对应下表（从0开始编号)
@@ -11,3 +11,8 @@ if __name__ == "__main__":
         print("FPS:", rate)
         print("FrameNo:", FrameNumber)
         print("duration", duration)
+
+        # 读取一帧进行保存
+        # ret, frame = cap.read()
+        # cv2.imwrite('/home/acsguser/Downloads/01_001.jpg', frame)
+        # sys.exit(0)

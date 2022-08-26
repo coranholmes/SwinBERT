@@ -1,6 +1,7 @@
 from run_caption_VidSwinBert_inference import *
 from run_caption_VidSwinBert_inference import _online_video_decode, _transforms
 import pickle, json, sys
+import gc, cv2
 
 
 def inference(args, video_path, model, tokenizer, tensorizer):
@@ -10,7 +11,42 @@ def inference(args, video_path, model, tokenizer, tensorizer):
 
     model.float()
     model.eval()
-    frames_lst = _online_video_decode(args, video_path)  # shape=[T,C,W,H] T is the no of frames (=64)
+
+    if args.file_type == "video": # video
+        frames_lst = _online_video_decode(args, video_path)  # {list: no. of segments}, each shape=[T,C,W,H] T is the no of frames (=64)
+    elif args.file_type == "image":  # image
+        frames = []
+        file_list = os.listdir(video_path)
+        for img_path in file_list:
+            img_path = os.path.join(video_path, img_path)
+            img = Image.open(img_path)
+            # img = cv2.imread(img_path)
+            frames.append(img)
+        print(len(frames))
+
+        frame_lst = []
+        for i in range(0, len(frames), 16):
+            frame_lst.append(frames[i: min(i+args.dense_caption_num, len(frames))])
+        del frames
+        gc.collect()
+        res = []
+        print("frame_lst successfully prepared: ", len(frame_lst))
+        i = 0
+        while len(frame_lst) > 0: # {list: no. of segments}
+            i += 1
+            # print(i)
+            ind_frames = frame_lst.pop(0)
+            # ind_frames = [frame.to_rgb().to_ndarray() for frame in ind_frames]
+            ind_frames = torch.as_tensor(np.stack(ind_frames))  # {list:64}
+            if len(ind_frames) < args.dense_caption_num:
+                # repeat last frame until the size becomes 64
+                repeat_last = ind_frames[-1].repeat(args.dense_caption_num - len(ind_frames), 1, 1, 1)
+                ind_frames = torch.cat([ind_frames, repeat_last], dim=0)
+            # print("before append")
+            res.append(ind_frames)
+        frames_lst = res  # {list: no. of segments}, each list: (64, 480, 856, 3)
+    else:
+        raise ValueError("file_type should be either video or image")
 
     if not isinstance(frames_lst, list):
         frames_lst = [frames_lst]
@@ -118,14 +154,33 @@ def main(args):
     tensorizer = build_tensorizer(args, tokenizer, is_train=False)
 
     ds_dir = args.dataset_path
-    g = os.walk(ds_dir)
-
-    for path, dir_list, file_list in g:
+    # Deal with images in subfolders
+    if args.file_type == "image":
+        logger.info(f"Loading images from {args.dataset_path}")
+        file_list = os.listdir(args.dataset_path)
         for file_name in file_list:
+            args.test_video_fname = os.path.join(args.dataset_path, file_name)
+            if args.rerun and args.test_video_fname in video_set:
+                print("Already process " + args.test_video_fname)
+                continue
+            print("processing " + args.test_video_fname)
+            cap = inference(args, args.test_video_fname, vl_transformer, tokenizer, tensorizer)
+            print(cap)
+            print("Length of caption list:", len(cap))
+            text = {
+                args.test_video_fname: cap
+            }
+            cap_file.writelines(json.dumps(text) + "\n")
+            cap_file.flush()
 
-            file_name = file_name.strip()
-            args.test_video_fname = os.path.join(path, file_name)
-            if args.test_video_fname.endswith(args.video_format):
+    # Deal with videos
+    elif args.file_type == "video":
+        logger.info(f"Loading videos from {args.dataset_path}")
+        g = os.walk(ds_dir)
+        for path, dir_list, file_list in g:
+            for file_name in file_list:
+                file_name = file_name.strip()
+                args.test_video_fname = os.path.join(path, file_name)
                 p_group = args.test_video_fname.split("/")
                 path_new = "/".join([p_group[-2], p_group[-1]])
 
@@ -133,7 +188,7 @@ def main(args):
                     print("Already process " + path_new)
                     continue
 
-                print("processing " + args.test_video_fname)
+                print("processing " + path_new)
                 cap = inference(args, args.test_video_fname, vl_transformer, tokenizer, tensorizer)
                 print(cap)
                 print("Length of caption list:", len(cap))
@@ -142,6 +197,8 @@ def main(args):
                 }
                 cap_file.writelines(json.dumps(text) + "\n")
                 cap_file.flush()
+    else:
+        raise ValueError("file_type should be either image or video")
 
     # with open("/home/acsguser/Codes/SwinBERT/datasets/captions2.pkl", "wb") as f:
     #     pickle.dump(cap_dict, f)

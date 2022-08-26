@@ -48,7 +48,8 @@ def _transforms(args, frames):
     raw_video_prcoess = Compose(raw_video_crop_list)
 
     frames = frames.numpy()
-    frames = np.transpose(frames, (0, 2, 3, 1))
+    if args.file_type == 'video':
+        frames = np.transpose(frames, (0, 2, 3, 1))
     num_of_frames, height, width, channels = frames.shape
 
     frame_list = []
@@ -163,6 +164,7 @@ def update_existing_config_for_inference(args):
     train_args.caption_file = args.caption_file
     train_args.old_caption_file = args.old_caption_file
     train_args.video_format = args.video_format
+    train_args.file_type = args.file_type
     return train_args
 
 def get_custom_args(base_config):
@@ -191,11 +193,12 @@ def get_custom_args(base_config):
     parser.add_argument('--no-dense_caption', dest='dense_caption', action='store_false')
     parser.set_defaults(dense_caption=True)
     parser.add_argument("--dense_caption_num", type=int, default=64, help="The num of consecutive frames used for generating the captions.")
-    parser.add_argument("--dataset_path", type=str, default='/home/acsguser/Codes/SwinBERT/datasets/Shanghai/data/')
+    parser.add_argument("--dataset_path", type=str, default="")
     parser.add_argument("--video_format", type=str, default='avi')
     parser.add_argument("--rerun", action='store_true')
-    parser.add_argument("--old_caption_file", type=str, default="/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/all_captions.txt")
-    parser.add_argument("--caption_file", type=str, default="/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/all_captions.txt")
+    parser.add_argument("--file_type", type=str, choices=['video', 'image'] ,default='image')
+    parser.add_argument("--old_caption_file", type=str, default="")
+    parser.add_argument("--caption_file", type=str, default="")
     args = base_config.parse_args()
     return args
 
