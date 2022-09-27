@@ -107,8 +107,10 @@ def main(args):
             for line in f:
                 line = json.loads(line.strip())
                 for k in line.keys():
-                    video_set.add(k.strip())
-
+                    if k.startswith('/home'):
+                        video_set.add(k.strip()[53:])  # TODO: for Violence dataset, use video_set.add(k.strip()[53:])
+                    else:
+                        video_set.add(k.strip())
     cap_file = open(args.caption_file, "w")
 
     # global training_saver
@@ -186,6 +188,11 @@ def main(args):
 
                 if args.rerun and path_new in video_set:
                     print("Already process " + path_new)
+                    continue
+
+                # Exclude the corrupted video from Violence dataset
+                if "v=8cTqh9tMz_I__#1_label_A.mp4" in args.test_video_fname:
+                    print("Skip " + args.test_video_fname)
                     continue
 
                 print("processing " + path_new)
