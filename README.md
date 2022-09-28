@@ -15,7 +15,7 @@ pip install -v --disable-pip-version-check --no-cache-dir ./
 ```
 
 ## Download
-Refer to the `Download` section in the original `README.md`. For pretrained model, I am currently using `VATEX` only.
+Refer to the `Download` section in the original `README_orig.md`. For pretrained model, I am currently using `VATEX` only.
 
 ## Dense caption generation
 Take the ucf-crime dataset as an example, set the paths in the below command and run accordingly
