@@ -179,6 +179,9 @@ def main(args):
     elif args.file_type == "video":
         logger.info(f"Loading videos from {args.dataset_path}")
         g = os.walk(ds_dir)
+
+        violence_issue_lst = ["v=8cTqh9tMz_I__#1_label_A.mp4", "v=9eME1y6V-T4__#01-12-00_01-18-00_label_A.mp4", "Saving.Private.Ryan.1998__#02-29-31_02-30-55_label_B2-G-0.mp4"]
+
         for path, dir_list, file_list in g:
             for file_name in file_list:
                 file_name = file_name.strip()
@@ -191,8 +194,12 @@ def main(args):
                     continue
 
                 # Exclude the corrupted video from Violence dataset
-                if "v=8cTqh9tMz_I__#1_label_A.mp4" in args.test_video_fname:
-                    print("Skip " + args.test_video_fname)
+                skip_cur_video = False
+                for corrupted_video in violence_issue_lst:
+                    if corrupted_video in args.test_video_fname:
+                        print("Skip " + args.test_video_fname)
+                        skip_cur_video = True
+                if skip_cur_video:
                     continue
 
                 print("processing " + path_new)

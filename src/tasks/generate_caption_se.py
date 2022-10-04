@@ -11,13 +11,16 @@ if __name__ == "__main__":
     is_test = "test" if args.is_test else "train"
     if args.dataset == "ucf":
         ds_name = "Crime"
+        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions.txt"
     elif args.dataset == "shanghai":
         ds_name = "Shanghai"
+        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/" + ds_name + "/RTFM_train_caption/" + is_test + "_captions.txt"
     elif args.dataset == "violence":
         ds_name = "Violence"
+        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Violence/RTFM_train_caption/all_captions.txt"
     else:
         raise ValueError("dataset should be either ucf, shanghai, or violence")
-    caption_path = "/home/acsguser/Codes/SwinBERT/datasets/" + ds_name + "/RTFM_train_caption/" + is_test + "_captions.txt"
+
     print("Loading captions from ", caption_path)
     tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
     model = AutoModel.from_pretrained("princeton-nlp/sup-simcse-bert-base-uncased")
