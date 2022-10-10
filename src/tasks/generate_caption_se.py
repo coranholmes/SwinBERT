@@ -5,7 +5,7 @@ import numpy as np
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate sentence embeddings of the captions")
-    parser.add_argument("--dataset", type=str, choices=['ucf', 'shanghai', 'violence'] ,help="dataset to generate caption embeddings")
+    parser.add_argument("--dataset", type=str, choices=['ucf', 'shanghai', 'violence', 'ped2'] ,help="dataset to generate caption embeddings")
     parser.add_argument("--is_test", action='store_true', default=False, help="whether to generate test caption embeddings")
     args = parser.parse_args()
     is_test = "test" if args.is_test else "train"
@@ -18,6 +18,9 @@ if __name__ == "__main__":
     elif args.dataset == "violence":
         ds_name = "Violence"
         caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Violence/RTFM_train_caption/all_captions.txt"
+    elif args.dataset == "ped2":
+        ds_name = "UCSDped2"
+        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/" + ds_name + "/RTFM_train_caption/" + is_test + "_captions.txt"
     else:
         raise ValueError("dataset should be either ucf, shanghai, or violence")
 
