@@ -18,10 +18,11 @@ def inference(args, video_path, model, tokenizer, tensorizer):
         frames = []
         file_list = os.listdir(video_path)
         for img_path in file_list:
-            img_path = os.path.join(video_path, img_path)
-            img = Image.open(img_path)
-            # img = cv2.imread(img_path)
-            frames.append(img)
+            if img_path.endswith(args.file_format):
+                img_path = os.path.join(video_path, img_path)
+                img = Image.open(img_path)
+                # img = cv2.imread(img_path)
+                frames.append(img)
         print(len(frames))
 
         frame_lst = []
@@ -161,20 +162,19 @@ def main(args):
         logger.info(f"Loading images from {args.dataset_path}")
         file_list = os.listdir(args.dataset_path)
         for file_name in file_list:
-            if file_name.endswith(args.file_format):
-                args.test_video_fname = os.path.join(args.dataset_path, file_name)
-                if args.rerun and args.test_video_fname in video_set:
-                    print("Already process " + args.test_video_fname)
-                    continue
-                print("processing " + args.test_video_fname)
-                cap = inference(args, args.test_video_fname, vl_transformer, tokenizer, tensorizer)
-                print(cap)
-                print("Length of caption list:", len(cap))
-                text = {
-                    args.test_video_fname: cap
-                }
-                cap_file.writelines(json.dumps(text) + "\n")
-                cap_file.flush()
+            args.test_video_fname = os.path.join(args.dataset_path, file_name)
+            if args.rerun and args.test_video_fname in video_set:
+                print("Already process " + args.test_video_fname)
+                continue
+            print("processing " + args.test_video_fname)
+            cap = inference(args, args.test_video_fname, vl_transformer, tokenizer, tensorizer)
+            print(cap)
+            print("Length of caption list:", len(cap))
+            text = {
+                args.test_video_fname: cap
+            }
+            cap_file.writelines(json.dumps(text) + "\n")
+            cap_file.flush()
 
     # Deal with videos
     elif args.file_type == "video":
