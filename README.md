@@ -26,7 +26,7 @@ CUDA_VISIBLE_DEVICES=2 python ./src/tasks/dense_caption_mass.py \
 --dataset_path /home/acsguser/Codes/SwinBERT/datasets/Crime/data/ \
 --caption_file /home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions.txt \
 --file_type video \
---video_format mp4 \
+--file_format mp4 \
 --do_lower_case \
 --dense_caption \
 --do_test

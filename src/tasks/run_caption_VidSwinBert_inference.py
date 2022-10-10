@@ -163,7 +163,7 @@ def update_existing_config_for_inference(args):
     train_args.rerun = args.rerun
     train_args.caption_file = args.caption_file
     train_args.old_caption_file = args.old_caption_file
-    train_args.video_format = args.video_format
+    train_args.file_format = args.file_format
     train_args.file_type = args.file_type
     return train_args
 
@@ -194,7 +194,7 @@ def get_custom_args(base_config):
     parser.set_defaults(dense_caption=True)
     parser.add_argument("--dense_caption_num", type=int, default=64, help="The num of consecutive frames used for generating the captions.")
     parser.add_argument("--dataset_path", type=str, default="")
-    parser.add_argument("--video_format", type=str, default='avi')
+    parser.add_argument("--file_format", type=str, default='avi')
     parser.add_argument("--rerun", action='store_true')
     parser.add_argument("--file_type", type=str, choices=['video', 'image'] ,default='image')
     parser.add_argument("--old_caption_file", type=str, default="")

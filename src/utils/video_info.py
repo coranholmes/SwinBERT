@@ -1,7 +1,7 @@
 import cv2,sys
 
 if __name__ == "__main__":
-    file_path = '/home/acsguser/Codes/SwinBERT/datasets/Shanghai/data/training/videos/01_001.avi'
+    file_path = '/home/acsguser/Codes/SwinBERT/datasets/Violence/data/test/v=-etV57xZ4_I__#1_label_B4-0-0.mp4'
     cap = cv2.VideoCapture(file_path)
     if cap.isOpened():  # 当成功打开视频时cap.isOpened()返回True,否则返回False
         # get方法参数按顺序对应下表（从0开始编号)
