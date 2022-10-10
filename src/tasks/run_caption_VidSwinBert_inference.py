@@ -53,8 +53,11 @@ def _transforms(args, frames):
     num_of_frames, height, width, channels = frames.shape
 
     frame_list = []
-    for i in range(args.max_num_frames):
-        frame_list.append(Image.fromarray(frames[i]))
+    for i in range(args.max_num_frames):  # frames[i].shape=(240,320,3)
+        if args.file_format == "tif":  # gray scale to RGB
+            frame_list.append(Image.fromarray(np.squeeze(frames[i]).astype('uint8')).convert('RGB'))
+        else:
+            frame_list.append(Image.fromarray(frames[i]))
 
     # apply normalization, output tensor (C x T x H x W) in the range [0, 1.0]
     crop_frames = raw_video_prcoess(frame_list)

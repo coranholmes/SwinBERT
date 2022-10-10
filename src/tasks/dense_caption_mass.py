@@ -17,11 +17,11 @@ def inference(args, video_path, model, tokenizer, tensorizer):
     elif args.file_type == "image":  # image
         frames = []
         file_list = os.listdir(video_path)
+        file_list.sort()
         for img_path in file_list:
             if img_path.endswith(args.file_format):
                 img_path = os.path.join(video_path, img_path)
                 img = Image.open(img_path)
-                # img = cv2.imread(img_path)
                 frames.append(img)
         print(len(frames))
 
@@ -33,12 +33,14 @@ def inference(args, video_path, model, tokenizer, tensorizer):
         res = []
         print("frame_lst successfully prepared: ", len(frame_lst))
         i = 0
-        while len(frame_lst) > 0: # {list: no. of segments}
+        while len(frame_lst) > 0:  # {list: no. of segments}
             i += 1
             # print(i)
             ind_frames = frame_lst.pop(0)
             # ind_frames = [frame.to_rgb().to_ndarray() for frame in ind_frames]
-            ind_frames = torch.as_tensor(np.stack(ind_frames))  # {list:64}
+            ind_frames = torch.as_tensor(np.stack(ind_frames))  # {list:64} -> {Tensor: (64,480,856,3)}
+            if len(ind_frames.shape) == 3:  # deal with gray scale images
+                ind_frames = torch.unsqueeze(ind_frames, dim=3)
             if len(ind_frames) < args.dense_caption_num:
                 # repeat last frame until the size becomes 64
                 repeat_last = ind_frames[-1].repeat(args.dense_caption_num - len(ind_frames), 1, 1, 1)
