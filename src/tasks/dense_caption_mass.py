@@ -111,7 +111,10 @@ def main(args):
                 line = json.loads(line.strip())
                 for k in line.keys():
                     if k.startswith('/home'):
-                        video_set.add(k.strip()[53:])  # TODO: for Violence dataset, use video_set.add(k.strip()[53:])
+                        if "Crime" in k:
+                            video_set.add(k.strip()[50:])  # for crime dataset, use video_set.add(k.strip()[50:])
+                        else:
+                            video_set.add(k.strip()[53:])  # for Violence, UCSDped2, Shanghai dataset, use video_set.add(k.strip()[53:])
                     else:
                         video_set.add(k.strip())
     cap_file = open(args.caption_file, "w")
