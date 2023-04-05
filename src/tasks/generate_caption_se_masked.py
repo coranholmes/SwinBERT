@@ -20,19 +20,24 @@ if __name__ == '__main__':
     parser.add_argument("--vid_name", type=str, default='', help="name of the video")
     args = parser.parse_args()
 
-    is_test = "test" if args.is_test else "train"
     if args.dataset == "ucf":
         ds_name = "Crime"
-        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions.txt"
+        caption_path = ["/home/acsguser/Codes/SwinBERT/datasets/Crime/RTFM_train_caption/all_captions.txt"]
     elif args.dataset == "shanghai":
         ds_name = "Shanghai"
-        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/" + ds_name + "/RTFM_train_caption/" + is_test + "_captions.txt"
+        caption_path = [
+            "/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/train_captions.txt",
+            "/home/acsguser/Codes/SwinBERT/datasets/Shanghai/RTFM_train_caption/train_captions.txt"
+        ]
     elif args.dataset == "violence":
         ds_name = "Violence"
-        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/Violence/RTFM_train_caption/all_captions.txt"
+        caption_path = ["/home/acsguser/Codes/SwinBERT/datasets/Violence/RTFM_train_caption/all_captions.txt"]
     elif args.dataset == "ped2":
         ds_name = "UCSDped2"
-        caption_path = "/home/acsguser/Codes/SwinBERT/datasets/" + ds_name + "/RTFM_train_caption/" + is_test + "_captions.txt"
+        caption_path = [
+            "/home/acsguser/Codes/SwinBERT/datasets/UCSDped2/RTFM_train_caption/train_captions.txt",
+            "/home/acsguser/Codes/SwinBERT/datasets/UCSDped2/RTFM_train_caption/test_captions.txt"
+        ]
     else:
         raise ValueError("dataset should be either ucf, shanghai, or violence")
 
@@ -42,22 +47,23 @@ if __name__ == '__main__':
     print("Loading captions from ", caption_path)
     tokenizer = AutoTokenizer.from_pretrained("princeton-nlp/" + args.model)
     model = AutoModel.from_pretrained("princeton-nlp/" + args.model)
-    with open(caption_path) as f:
-        for line in f:
-            captions = json.loads(line)
-            key = []
-            for k in captions:
-                key.append(k)
-            assert len(key) == 1
-            key = key[0]
-            if args.vid_name in key:
-                if key.endswith("mp4") or key.endswith("avi"):
-                    vid_name = os.path.split(key)[1][:-4]
-                else:
-                    vid_name = os.path.split(key)[-1]
-                print(vid_name)
-                texts = captions[key]
-                break
+    for cp in caption_path:
+        with open(cp) as f:
+            for line in f:
+                captions = json.loads(line)
+                key = []
+                for k in captions:
+                    key.append(k)
+                assert len(key) == 1
+                key = key[0]
+                if args.vid_name in key:
+                    if key.endswith("mp4") or key.endswith("avi"):
+                        vid_name = os.path.split(key)[1][:-4]
+                    else:
+                        vid_name = os.path.split(key)[-1]
+                    print(vid_name)
+                    texts = captions[key]
+                    break
     max_len = 20
     # for cc in texts:
     #     cur_len = len(cc.split())

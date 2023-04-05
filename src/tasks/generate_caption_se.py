@@ -5,7 +5,7 @@ import numpy as np
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate sentence embeddings of the captions")
-    parser.add_argument("--dataset", type=str, choices=['ucf', 'shanghai', 'violence', 'ped2'] ,help="dataset to generate caption embeddings")
+    parser.add_argument("--dataset", type=str, choices=['ucf', 'shanghai', 'violence', 'ped2'] ,default='ucf', help="dataset to generate caption embeddings")
     parser.add_argument("--is_test", action='store_true', default=False, help="whether to generate test caption embeddings")
     parser.add_argument("--caption_path", type=str, default='', help="path to save the generated embeddings")
     parser.add_argument("--output_path", type=str, default='', help="path to save the generated embeddings")
