@@ -1,6 +1,5 @@
 # Dense generation using SwinBERT
-These codes are used in TEVAD paper for generate text features. However, these codes are not actively maintained and use at your own risk.
-Refer to `README.md` for more information about setting up the environment.
+The code provided here was used in the TEVAD paper to generate text features. Please note that these codes are not actively maintained and should be used at your own risk. For instructions on setting up the environment, please refer to the `README_orig.md` file.
 
 ## Requirements 
 pre-requisites:
