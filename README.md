@@ -1,4 +1,4 @@
-# Dense generation using SwinBERT
+# Dense caption generation using SwinBERT
 The code provided here was used in the TEVAD paper to generate text features. Please note that these codes are not actively maintained and should be used at your own risk. For instructions on setting up the environment, please refer to the `README_orig.md` file.
 
 ## Requirements 
